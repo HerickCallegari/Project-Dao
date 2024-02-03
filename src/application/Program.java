@@ -1,17 +1,16 @@
 package application;
 
 import model.dao.DaoFactory;
-import model.dao.SellerDao;
-import model.entities.Seller;
+import model.dao.DepartmentDao;
+import model.entities.Department;
 
 public class Program {
 
 	public static void main(String[] args) {
-	SellerDao sld = DaoFactory.createSellerDao();
+	DepartmentDao depD = DaoFactory.createDepartmentDao();
 	
-	Seller seller = sld.findById(3);
+	depD.insert(new Department(5, "penis"));
 	
-	System.out.println(seller);
 	
 	}
 
