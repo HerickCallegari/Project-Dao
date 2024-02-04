@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
 import db.DB;
@@ -42,16 +43,35 @@ public class DepartmentDaoJDBC implements DepartmentDao{
 
 	@Override
 	public void update(Department obj) {
+		/*
+	PreparedStatement st = null;
+	ResultSet rs = null;
+	
+	try {
+		st = conn.prepareStatement("UPDATE department "
+				+ "SET "
+				+ "Id = ? "
+				+ "Name = ? "
+				+ "WHERE Id = ?;");
+		
+		st.setInt(1, obj.getId());
+		st.setString(2, obj.getName());
+		
+	} catch (SQLException e) {
+		throw new DbException(e.getMessage());
+	} 
+	*/
 	}
 
 	@Override
-	public void delete(Integer id) {
+	public void delete(Department obj) {
 		PreparedStatement st = null;
 		try {
+				
 				st = conn.prepareStatement("Delete from department "
 						+ "where id = ?;");
 				
-				st.setInt(1, id);
+				st.setInt(1, obj.getId());
 				
 				st.execute();
 				
@@ -76,12 +96,9 @@ public class DepartmentDaoJDBC implements DepartmentDao{
 			rs = st.executeQuery();
 			
 			if ( rs.next()) {
-				Department dp = new Department();
-				dp.setId(rs.getInt("Id"));
-				dp.setName(rs.getString("Name"));
-				return dp;
-				
+				return instanceDepartment(rs);
 			}
+			
 		}catch (SQLException e) {
 			throw new DbException(e.getMessage());
 		}finally {
@@ -92,10 +109,33 @@ public class DepartmentDaoJDBC implements DepartmentDao{
 		
 	}
 
+	public static Department instanceDepartment(ResultSet rs) throws SQLException {
+		return new Department(rs.getInt("Id"), rs.getString("Name"));
+		
+	}
+	
 	@Override
 	public List<Department> findAll() {
-		// TODO Auto-generated method stub
-		return null;
+		List<Department> deps = new ArrayList<>();
+		PreparedStatement st = null;
+		ResultSet rs = null;
+		try {
+			
+			st = conn.prepareStatement("SELECT * from department;");
+			rs = st.executeQuery();
+			
+			while (rs.next()) {
+				deps.add(new Department(rs.getInt("Id"), rs.getString("Name")));
+			}
+			
+			return deps;
+			
+		}catch (SQLException e) {
+			throw new DbException(e.getMessage());
+		}finally {
+			DB.closeResultSet(rs);
+			DB.closeStatement(st);
+		}
 	}
 
 }
