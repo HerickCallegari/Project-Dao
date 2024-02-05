@@ -9,8 +9,11 @@ import java.util.List;
 
 import db.DB;
 import db.DbException;
+import model.dao.DaoFactory;
 import model.dao.DepartmentDao;
+import model.dao.SellerDao;
 import model.entities.Department;
+import model.entities.Seller;
 
 public class DepartmentDaoJDBC implements DepartmentDao {
 
@@ -43,7 +46,6 @@ public class DepartmentDaoJDBC implements DepartmentDao {
 	@Override
 	public void update(Department obj) {
 		PreparedStatement st = null;
-		ResultSet rs = null;
 
 		try {
 			st = conn.prepareStatement("UPDATE department SET Name = ? WHERE Id = ?;"
@@ -51,9 +53,13 @@ public class DepartmentDaoJDBC implements DepartmentDao {
 
 			st.setInt(1, obj.getId());
 			st.setString(2, obj.getName());
-
+			
+			st.execute();
+			
 		} catch (SQLException e) {
 			throw new DbException(e.getMessage());
+		}finally {
+			DB.closeStatement(st);
 		}
 	}
 
@@ -61,7 +67,11 @@ public class DepartmentDaoJDBC implements DepartmentDao {
 	public void delete(Department obj) {
 		PreparedStatement st = null;
 		try {
-
+			SellerDao sld = DaoFactory.createSellerDao();
+			if (sld.findByDepartment(obj) != null) {
+			List<Seller> sellers = sld.findByDepartment(obj);
+			sellers.forEach(x -> sld.deleteBy(x));
+			}
 			st = conn.prepareStatement("Delete from department where id = ?;");
 
 			st.setInt(1, obj.getId());
@@ -109,16 +119,16 @@ public class DepartmentDaoJDBC implements DepartmentDao {
 
 	@Override
 	public List<Department> findAll() {
-		List<Department> deps = new ArrayList<>();
 		PreparedStatement st = null;
 		ResultSet rs = null;
 		try {
+			List<Department> deps = new ArrayList<>();
 
 			st = conn.prepareStatement("SELECT * from department;");
 			rs = st.executeQuery();
 
 			while (rs.next()) {
-				deps.add(new Department(rs.getInt("Id"), rs.getString("Name")));
+				deps.add(instanceDepartment(rs));
 			}
 
 			return deps;
